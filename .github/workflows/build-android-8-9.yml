@@ -1,4 +1,4 @@
-name: MilChat APK (Android 8-9)
+name: Build MilChat APK (Android 8-9)
 
 on:
   workflow_dispatch:
@@ -25,9 +25,6 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          api-level: '28'
-          build-tools: '28.0.3'
 
       - name: Build APK for Android 8-9
         run: |
@@ -37,7 +34,7 @@ jobs:
           npx cap sync android
           sed -i 's/minSdkVersion = .*/minSdkVersion = 26/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 28/' android/variables.gradle
-          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 28/' android/variables.gradle
+          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/' android/variables.gradle
           cd android
           ./gradlew assembleDebug
 
