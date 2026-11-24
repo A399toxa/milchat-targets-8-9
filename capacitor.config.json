@@ -1,0 +1,6 @@
+{
+  "appId": "ua.milchat.targets",
+  "appName": "MilChat Targets",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
