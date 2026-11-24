@@ -34,9 +34,18 @@ jobs:
       - name: Build APK for Android 8-9
         run: |
           npm init -y --force
-          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
+          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/filesystem@5
           npx cap add android
           npx cap sync android
+          python3 -c '
+          p = "android/app/src/main/AndroidManifest.xml"
+          s = open(p, encoding="utf-8").read()
+          perm = "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" android:maxSdkVersion=\"28\" />\n    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" android:maxSdkVersion=\"28\" />"
+          if "WRITE_EXTERNAL_STORAGE" not in s:
+              s = s.replace("<manifest", "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"", 1) if "xmlns:android=" not in s else s
+              s = s.replace("<application", perm + "\n\n    <application", 1)
+          open(p, "w", encoding="utf-8").write(s)
+          '
           sed -i 's/minSdkVersion = .*/minSdkVersion = 26/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 28/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/' android/variables.gradle
