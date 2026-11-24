@@ -48,58 +48,30 @@
       color: #c7d4e2;
       margin-bottom: 6px;
     }
-    textarea {
+    textarea, input[type="text"] {
       width: 100%;
-      min-height: 140px;
-      padding: 10px;
       border-radius: 6px;
       border: 1px solid #3c4b5c;
       background-color: #0d1115;
       color: #f3f7fb;
       font-size: 14px;
+      padding: 10px;
+    }
+    textarea {
+      min-height: 140px;
       font-family: monospace;
       resize: vertical;
-    }
-    input[type="text"] {
-      width: 100%;
-      min-height: 44px;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #3c4b5c;
-      background-color: #0d1115;
-      color: #f3f7fb;
-      font-size: 14px;
-    }
-    .mode-row {
       margin-bottom: 10px;
     }
-    .mode-btn {
-      display: inline-block;
-      width: 49%;
-      min-height: 48px;
-      padding: 10px 8px;
-      border-radius: 6px;
-      border: 1px solid #3c4b5c;
-      background-color: #12171d;
-      color: #d6e0ea;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
-      cursor: pointer;
-    }
-    .mode-btn + .mode-btn {
-      margin-left: 2%;
-    }
-    .mode-btn.active {
-      background-color: #1f5c38;
-      border-color: #369e60;
-      color: #ffffff;
+    input[type="text"] {
+      min-height: 44px;
+      margin-bottom: 10px;
     }
     .btn {
-      display: inline-block;
+      display: block;
       width: 100%;
-      min-height: 48px;
-      padding: 12px 14px;
+      min-height: 46px;
+      padding: 11px 14px;
       border-radius: 6px;
       border: none;
       font-size: 15px;
@@ -113,544 +85,307 @@
       color: #ffffff;
     }
     .btn-success {
-      background-color: #16a34a;
+      background-color: #1f7a46;
       color: #ffffff;
     }
     .btn-secondary {
-      background-color: #2c3744;
-      color: #e6eef7;
-      border: 1px solid #415163;
+      background-color: #26303d;
+      color: #e2e8f0;
+      border: 1px solid #3c4b5c;
     }
     .status {
       padding: 10px;
       border-radius: 6px;
-      background-color: #121820;
-      border: 1px solid #2c3947;
+      background-color: #111822;
+      border: 1px solid #2b3a4a;
+      color: #d6e4f0;
       font-size: 13px;
-      color: #cbd7e3;
-      margin-bottom: 10px;
+      margin-top: 6px;
       word-break: break-word;
     }
-    .list-item {
+    .point-item {
       padding: 8px 10px;
       border-radius: 6px;
-      background-color: #11161c;
+      background-color: #11161d;
       border: 1px solid #26313d;
       margin-bottom: 6px;
       font-size: 13px;
     }
-    .list-item strong {
-      color: #7dd3fc;
-    }
-    canvas {
-      width: 100%;
-      height: 220px;
-      display: block;
-      background-color: #0d1217;
-      border: 1px solid #2b3745;
-      border-radius: 6px;
+    .kml-box {
+      min-height: 120px;
+      font-size: 12px;
+      font-family: monospace;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <div class="title">MilChat Парсер Координат</div>
-      <div class="subtitle">100% офлайн • DD, DDM, DMS, MGRS • Експорт у KML (Android 8–9)</div>
+      <div class="title">MilChat KML Експортер</div>
+      <div class="subtitle">Встав текст із координатами, розпізнай точки та збережи KML у пам'ять пристрою</div>
 
-      <div class="mode-row">
-        <button type="button" id="btnModeTargets" class="mode-btn active" onclick="setMode('targets')">Цілі (точки)</button>
-        <button type="button" id="btnModeRoute" class="mode-btn" onclick="setMode('route')">Маршрут (лінія)</button>
-      </div>
+      <label class="label" for="routeName">Назва маршруту / групи</label>
+      <input id="routeName" type="text" value="MilChat Targets" />
 
-      <label class="label" for="prefixInput">Префікс назви точок</label>
-      <input type="text" id="prefixInput" value="ціль" style="margin-bottom: 10px;" />
+      <label class="label" for="rawInput">Вхідний текст</label>
+      <textarea id="rawInput" placeholder="Встав текст із координатами..."></textarea>
 
-      <label class="label" for="rawInput">Текст із координатами</label>
-      <textarea id="rawInput" placeholder="Вставте текст із координатами, наприклад:
-37UCP1234567890
-48.4647, 35.0462
-48°27'53&quot;N 35°02'46&quot;E"></textarea>
+      <button id="parseBtn" class="btn btn-primary" type="button">Розпізнати точки за послідовністю</button>
+      <button id="exportBtn" class="btn btn-success" type="button">Зберегти / Експортувати KML</button>
+      <button id="copyKmlBtn" class="btn btn-secondary" type="button">Скопіювати KML-текст</button>
+      <button id="clearBtn" class="btn btn-secondary" type="button">Очистити</button>
+
+      <div id="statusBox" class="status">Готово до роботи.</div>
     </div>
 
     <div class="card">
-      <button type="button" class="btn btn-primary" onclick="parseCoordinates()">Розпізнати точки за послідовністю</button>
-      <button type="button" class="btn btn-success" onclick="exportKml()">Зберегти / Експортувати KML</button>
-      <button type="button" class="btn btn-secondary" onclick="clearAll()">Очистити</button>
-      <div id="statusBox" class="status">Готово до роботи. Вставте текст та натисніть «Розпізнати точки за послідовністю».</div>
-    </div>
-
-    <div class="card">
-      <div class="label">Схема розташування точок</div>
-      <canvas id="mapCanvas" width="760" height="220"></canvas>
-    </div>
-
-    <div class="card">
-      <div class="label">Розпізнані точки (<span id="countLabel">0</span>)</div>
+      <div class="label">Схема розташування точок (<span id="pointsCount">0</span>)</div>
       <div id="pointsList">Немає розпізнаних точок.</div>
+    </div>
+
+    <div class="card">
+      <label class="label" for="kmlOutput">Попередній перегляд KML</label>
+      <textarea id="kmlOutput" class="kml-box" readonly placeholder="Тут з'явиться згенерований KML..."></textarea>
     </div>
   </div>
 
   <script>
-    var currentMode = 'targets';
-    var parsedPoints = [];
+    (function () {
+      const rawInput = document.getElementById('rawInput');
+      const routeNameInput = document.getElementById('routeName');
+      const parseBtn = document.getElementById('parseBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const copyKmlBtn = document.getElementById('copyKmlBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const statusBox = document.getElementById('statusBox');
+      const pointsList = document.getElementById('pointsList');
+      const pointsCount = document.getElementById('pointsCount');
+      const kmlOutput = document.getElementById('kmlOutput');
 
-    function setMode(mode) {
-      currentMode = mode;
-      var btnTargets = document.getElementById('btnModeTargets');
-      var btnRoute = document.getElementById('btnModeRoute');
-      if (mode === 'route') {
-        btnRoute.className = 'mode-btn active';
-        btnTargets.className = 'mode-btn';
-      } else {
-        btnTargets.className = 'mode-btn active';
-        btnRoute.className = 'mode-btn';
-      }
-      drawPreview();
-    }
+      let parsedPoints = [];
 
-    function setStatus(msg) {
-      document.getElementById('statusBox').innerHTML = msg;
-    }
-
-    function escapeXml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
-    }
-
-    function normalizeSpacesAndQuotes(text) {
-      return String(text)
-        .replace(/[\u2018\u2019\u02b9`]/g, "'")
-        .replace(/[\u201c\u201d\u2033]/g, '"')
-        .replace(/[^\x20-\x7E\u0400-\u04FF\u00B0\n\r]/g, ' ');
-    }
-
-    // Декодер MGRS -> WGS84 (Lat, Lon)
-    function mgrsToLatLon(mgrsRaw) {
-      var clean = mgrsRaw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-      var match = clean.match(/^(\d{1,2})([C-HJ-NP-X])([A-HJ-NP-Z])([A-HJ-V])(\d{2,10})$/);
-      if (!match) {
-        return null;
-      }
-      var digits = match[5];
-      if (digits.length % 2 !== 0) {
-        return null;
+      function setStatus(msg) {
+        statusBox.textContent = msg;
       }
 
-      var zone = parseInt(match[1], 10);
-      var latBand = match[2];
-      var colLetter = match[3];
-      var rowLetter = match[4];
-      var halfLen = digits.length / 2;
-      var scale = Math.pow(10, 5 - halfLen);
-      var eWithin = parseInt(digits.substring(0, halfLen), 10) * scale;
-      var nWithin = parseInt(digits.substring(halfLen), 10) * scale;
-
-      var colSet = (zone - 1) % 3;
-      var colOriginLetters = {
-        0: 'ABCDEFGH',
-        1: 'JKLMNPQR',
-        2: 'STUVWXYZ'
-      }[colSet];
-      var colIdx = colOriginLetters.indexOf(colLetter);
-      if (colIdx === -1) {
-        return null;
-      }
-      var easting = (colIdx + 1) * 100000 + eWithin;
-
-      var rowLetters = 'ABCDEFGHJKLMNPQRSTUV';
-      var rowIdx = rowLetters.indexOf(rowLetter);
-      if (rowIdx === -1) {
-        return null;
+      function escapeXml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
       }
 
-      var bandLetters = 'CDEFGHJKLMNPQRSTUVWX';
-      var bandIdx = bandLetters.indexOf(latBand);
-      var approxLat = -80 + bandIdx * 8 + 4;
-      var isNorth = approxLat >= 0;
+      function parseCoordinatesFromText(text) {
+        const lines = text.split(/\r?\n/);
+        const coordRegex = /(-?\d{1,2}\.\d{3,})\s*[,;\s]\s*(-?\d{1,3}\.\d{3,})/;
+        const results = [];
+        let currentContext = '';
 
-      var minNorthingBand = approxLat * 111320 - 450000;
-      if (minNorthingBand < 0 && isNorth) {
-        minNorthingBand = 0;
-      }
+        lines.forEach((rawLine) => {
+          const line = rawLine.trim();
+          if (!line) return;
 
-      var cycle = 2000000;
-      var rowOffset = (zone % 2 === 0) ? 500000 : 0;
-      var nBase = (rowIdx * 100000 + rowOffset) % cycle;
-      var k = Math.round((minNorthingBand - nBase) / cycle);
-      var northing = nBase + k * cycle;
-      while (northing < minNorthingBand - 100000) {
-        northing += cycle;
-      }
-
-      return utmToLatLon(easting, northing, zone, isNorth);
-    }
-
-    function utmToLatLon(easting, northing, zone, isNorth) {
-      var a = 6378137.0;
-      var f = 1 / 298.257223563;
-      var b = a * (1 - f);
-      var eSq = 1 - (b * b) / (a * a);
-      var ePrimeSq = (a * a - b * b) / (b * b);
-      var k0 = 0.9996;
-
-      var x = easting - 500000.0;
-      var y = isNorth ? northing : northing - 10000000.0;
-
-      var m = y / k0;
-      var mu = m / (a * (1 - eSq / 4 - 3 * eSq * eSq / 64 - 5 * eSq * eSq * eSq / 256));
-
-      var e1 = (1 - Math.sqrt(1 - eSq)) / (1 + Math.sqrt(1 - eSq));
-      var j1 = 3 * e1 / 2 - 27 * Math.pow(e1, 3) / 32;
-      var j2 = 21 * e1 * e1 / 16 - 55 * Math.pow(e1, 4) / 32;
-      var j3 = 151 * Math.pow(e1, 3) / 96;
-      var j4 = 1097 * Math.pow(e1, 4) / 512;
-
-      var fp = mu + j1 * Math.sin(2 * mu) + j2 * Math.sin(4 * mu) + j3 * Math.sin(6 * mu) + j4 * Math.sin(8 * mu);
-
-      var sinFp = Math.sin(fp);
-      var cosFp = Math.cos(fp);
-      var tanFp = Math.tan(fp);
-
-      var n1 = a / Math.sqrt(1 - eSq * sinFp * sinFp);
-      var t1 = tanFp * tanFp;
-      var c1 = ePrimeSq * cosFp * cosFp;
-      var r1 = a * (1 - eSq) / Math.pow(1 - eSq * sinFp * sinFp, 1.5);
-      var d = x / (n1 * k0);
-
-      var latRad = fp - (n1 * tanFp / r1) * (
-        d * d / 2 -
-        (5 + 3 * t1 + 10 * c1 - 4 * c1 * c1 - 9 * ePrimeSq) * Math.pow(d, 4) / 24 +
-        (61 + 90 * t1 + 298 * c1 + 45 * t1 * t1 - 252 * ePrimeSq - 3 * c1 * c1) * Math.pow(d, 6) / 720
-      );
-
-      var lonOriginDeg = (zone - 1) * 6 - 180 + 3;
-      var lonRad = (
-        d -
-        (1 + 2 * t1 + c1) * Math.pow(d, 3) / 6 +
-        (5 - 2 * c1 + 28 * t1 - 3 * c1 * c1 + 8 * ePrimeSq + 24 * t1 * t1) * Math.pow(d, 5) / 120
-      ) / cosFp;
-
-      return {
-        lat: latRad * 180 / Math.PI,
-        lon: lonOriginDeg + lonRad * 180 / Math.PI
-      };
-    }
-
-    function validLatLon(lat, lon) {
-      return typeof lat === 'number' && typeof lon === 'number' &&
-        !isNaN(lat) && !isNaN(lon) &&
-        lat >= -85 && lat <= 85 && lon >= -180 && lon <= 180;
-    }
-
-    function parseCoordinates() {
-      var raw = document.getElementById('rawInput').value;
-      var cleaned = normalizeSpacesAndQuotes(raw);
-      var prefix = document.getElementById('prefixInput').value;
-      if (!prefix || prefix.replace(/\s+/g, '') === '') {
-        prefix = 'ціль';
-      } else {
-        prefix = prefix.replace(/^\s+|\s+$/g, '');
-      }
-
-      var items = [];
-
-      // 1. MGRS (з пробілами або без)
-      var mgrsRegex = /\b\d{1,2}\s*[C-HJ-NP-X]\s*[A-HJ-NP-Z]\s*[A-HJ-V]\s*\d{4,10}\b/gi;
-      var m;
-      while ((m = mgrsRegex.exec(cleaned)) !== null) {
-        var ll = mgrsToLatLon(m[0]);
-        if (ll && validLatLon(ll.lat, ll.lon)) {
-          items.push({
-            index: m.index,
-            raw: m[0].replace(/\s+/g, ' '),
-            format: 'MGRS',
-            lat: ll.lat,
-            lon: ll.lon
-          });
-        }
-      }
-
-      // 2. DMS: 48°27'53"N 35°02'46"E
-      var dmsRegex = /(\d{1,2})\s*(?:deg|\u00B0)?\s*(\d{1,2})\s*(?:min|')?\s*(\d{1,2}(?:\.\d+)?)\s*(?:sec|")?\s*([NSПЦ])\s*[,;\/\s]+\s*(\d{1,3})\s*(?:deg|\u00B0)?\s*(\d{1,2})\s*(?:min|')?\s*(\d{1,2}(?:\.\d+)?)\s*(?:sec|")?\s*([EWСЗ])/gi;
-      while ((m = dmsRegex.exec(cleaned)) !== null) {
-        var latD = parseFloat(m[1]) + parseFloat(m[2]) / 60 + parseFloat(m[3]) / 3600;
-        var latH = m[4].toUpperCase();
-        if (latH === 'S' || latH === 'Ц') latD = -latD;
-
-        var lonD = parseFloat(m[5]) + parseFloat(m[6]) / 60 + parseFloat(m[7]) / 3600;
-        var lonH = m[8].toUpperCase();
-        if (lonH === 'W' || lonH === 'З') lonD = -lonD;
-
-        if (validLatLon(latD, lonD)) {
-          items.push({
-            index: m.index,
-            raw: m[0],
-            format: 'DMS',
-            lat: latD,
-            lon: lonD
-          });
-        }
-      }
-
-      // 3. DDM: 48°27.88'N 35°02.77'E
-      var ddmRegex = /(\d{1,2})\s*(?:deg|\u00B0)?\s*(\d{1,2}(?:\.\d+)?)\s*(?:min|')?\s*([NSПЦ])\s*[,;\/\s]+\s*(\d{1,3})\s*(?:deg|\u00B0)?\s*(\d{1,2}(?:\.\d+)?)\s*(?:min|')?\s*([EWСЗ])/gi;
-      while ((m = ddmRegex.exec(cleaned)) !== null) {
-        var latM = parseFloat(m[1]) + parseFloat(m[2]) / 60;
-        var h1 = m[3].toUpperCase();
-        if (h1 === 'S' || h1 === 'Ц') latM = -latM;
-
-        var lonM = parseFloat(m[4]) + parseFloat(m[5]) / 60;
-        var h2 = m[6].toUpperCase();
-        if (h2 === 'W' || h2 === 'З') lonM = -lonM;
-
-        if (validLatLon(latM, lonM)) {
-          items.push({
-            index: m.index,
-            raw: m[0],
-            format: 'DDM',
-            lat: latM,
-            lon: lonM
-          });
-        }
-      }
-
-      // 4. DD: 48.4647, 35.0462
-      var ddRegex = /(-?\d{1,2}\.\d{3,8})\s*[,;\s]+\s*(-?\d{1,3}\.\d{3,8})/g;
-      while ((m = ddRegex.exec(cleaned)) !== null) {
-        var latVal = parseFloat(m[1]);
-        var lonVal = parseFloat(m[2]);
-        if (validLatLon(latVal, lonVal)) {
-          items.push({
-            index: m.index,
-            raw: m[1] + ', ' + m[2],
-            format: 'DD',
-            lat: latVal,
-            lon: lonVal
-          });
-        }
-      }
-
-      // Сортування за послідовністю у тексті
-      items.sort(function(a, b) {
-        return a.index - b.index;
-      });
-
-      // Видалення дублікатів за позицією в тексті
-      var unique = [];
-      var i, j, overlap;
-      for (i = 0; i < items.length; i++) {
-        overlap = false;
-        for (j = 0; j < unique.length; j++) {
-          if (Math.abs(items[i].index - unique[j].index) < 6) {
-            overlap = true;
-            break;
+          const match = line.match(coordRegex);
+          if (match) {
+            const lat = parseFloat(match[1]);
+            const lon = parseFloat(match[2]);
+            if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+              const labelPart = line.replace(match[0], '').trim();
+              const title = labelPart || currentContext || ('Точка ' + (results.length + 1));
+              results.push({
+                index: results.length + 1,
+                title: title,
+                lat: lat,
+                lon: lon,
+                raw: line
+              });
+              return;
+            }
           }
-        }
-        if (!overlap) {
-          unique.push({
-            name: prefix + ' ' + (unique.length + 1),
-            format: items[i].format,
-            raw: items[i].raw,
-            lat: items[i].lat,
-            lon: items[i].lon
-          });
-        }
+
+          currentContext = line;
+        });
+
+        return results;
       }
 
-      parsedPoints = unique;
-      renderPoints();
-      drawPreview();
+      function buildKml(points, docName) {
+        const placemarks = points.map((p) => {
+          return [
+            '    <Placemark>',
+            '      <name>' + escapeXml(p.index + '. ' + p.title) + '</name>',
+            '      <description>' + escapeXml(p.raw) + '</description>',
+            '      <Point>',
+            '        <coordinates>' + p.lon + ',' + p.lat + ',0</coordinates>',
+            '      </Point>',
+            '    </Placemark>'
+          ].join('\n');
+        }).join('\n');
 
-      if (parsedPoints.length === 0) {
-        setStatus('Координати не знайдено. Перевірте формат запису (MGRS, DD, DDM або DMS).');
-      } else {
-        setStatus('Розпізнано точок: <b>' + parsedPoints.length + '</b>. Режим: <b>' + (currentMode === 'route' ? 'Маршрут' : 'Цілі') + '</b>.');
-      }
-    }
-
-    function renderPoints() {
-      var listEl = document.getElementById('pointsList');
-      var countEl = document.getElementById('countLabel');
-      countEl.innerHTML = parsedPoints.length;
-
-      if (parsedPoints.length === 0) {
-        listEl.innerHTML = 'Немає розпізнаних точок.';
-        return;
-      }
-
-      var html = '';
-      var i;
-      for (i = 0; i < parsedPoints.length; i++) {
-        var pt = parsedPoints[i];
-        html += '<div class="list-item">' +
-          '<strong>' + escapeXml(pt.name) + '</strong> [' + pt.format + ']<br/>' +
-          'Lat: ' + pt.lat.toFixed(6) + ', Lon: ' + pt.lon.toFixed(6) +
-          '</div>';
-      }
-      listEl.innerHTML = html;
-    }
-
-    function drawPreview() {
-      var canvas = document.getElementById('mapCanvas');
-      if (!canvas || !canvas.getContext) return;
-      var ctx = canvas.getContext('2d');
-      var w = canvas.width;
-      var h = canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#0d1217';
-      ctx.fillRect(0, 0, w, h);
-
-      if (parsedPoints.length === 0) {
-        ctx.fillStyle = '#7c8fa3';
-        ctx.font = '16px Arial';
-        ctx.fillText('Немає точок для відображення', 20, 115);
-        return;
+        return [
+          '<?xml version="1.0" encoding="UTF-8"?>',
+          '<kml xmlns="http://www.opengis.net/kml/2.2">',
+          '  <Document>',
+          '    <name>' + escapeXml(docName || 'MilChat Targets') + '</name>',
+          placemarks,
+          '  </Document>',
+          '</kml>'
+        ].join('\n');
       }
 
-      var minLat = parsedPoints[0].lat;
-      var maxLat = parsedPoints[0].lat;
-      var minLon = parsedPoints[0].lon;
-      var maxLon = parsedPoints[0].lon;
-      var i;
-
-      for (i = 1; i < parsedPoints.length; i++) {
-        if (parsedPoints[i].lat < minLat) minLat = parsedPoints[i].lat;
-        if (parsedPoints[i].lat > maxLat) maxLat = parsedPoints[i].lat;
-        if (parsedPoints[i].lon < minLon) minLon = parsedPoints[i].lon;
-        if (parsedPoints[i].lon > maxLon) maxLon = parsedPoints[i].lon;
-      }
-
-      var pad = 28;
-      var spanLat = (maxLat - minLat) || 0.01;
-      var spanLon = (maxLon - minLon) || 0.01;
-
-      function toX(lon) {
-        return pad + ((lon - minLon) / spanLon) * (w - pad * 2);
-      }
-      function toY(lat) {
-        return h - pad - ((lat - minLat) / spanLat) * (h - pad * 2);
-      }
-
-      if (currentMode === 'route' && parsedPoints.length > 1) {
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        for (i = 0; i < parsedPoints.length; i++) {
-          var x = toX(parsedPoints[i].lon);
-          var y = toY(parsedPoints[i].lat);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-
-      for (i = 0; i < parsedPoints.length; i++) {
-        var px = toX(parsedPoints[i].lon);
-        var py = toY(parsedPoints[i].lat);
-        ctx.fillStyle = currentMode === 'route' ? '#22c55e' : '#ef4444';
-        ctx.beginPath();
-        ctx.arc(px, py, 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '13px Arial';
-        ctx.fillText(parsedPoints[i].name, px + 8, py - 6);
-      }
-    }
-
-    function buildKml() {
-      var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-        '<kml xmlns="http://www.opengis.net/kml/2.2">\n' +
-        '<Document>\n' +
-        '  <name>' + escapeXml(currentMode === 'route' ? 'MilChat Route' : 'MilChat Targets') + '</name>\n';
-
-      var i;
-      for (i = 0; i < parsedPoints.length; i++) {
-        var pt = parsedPoints[i];
-        xml += '  <Placemark>\n' +
-          '    <name>' + escapeXml(pt.name) + '</name>\n' +
-          '    <description>' + escapeXml(pt.format + ': ' + pt.raw) + '</description>\n' +
-          '    <Point>\n' +
-          '      <coordinates>' + pt.lon.toFixed(6) + ',' + pt.lat.toFixed(6) + ',0</coordinates>\n' +
-          '    </Point>\n' +
-          '  </Placemark>\n';
-      }
-
-      if (currentMode === 'route' && parsedPoints.length > 1) {
-        var coords = [];
-        for (i = 0; i < parsedPoints.length; i++) {
-          coords.push(parsedPoints[i].lon.toFixed(6) + ',' + parsedPoints[i].lat.toFixed(6) + ',0');
-        }
-        xml += '  <Placemark>\n' +
-          '    <name>Маршрут</name>\n' +
-          '    <LineString>\n' +
-          '      <tessellate>1</tessellate>\n' +
-          '      <coordinates>' + coords.join(' ') + '</coordinates>\n' +
-          '    </LineString>\n' +
-          '  </Placemark>\n';
-      }
-
-      xml += '</Document>\n</kml>';
-      return xml;
-    }
-
-    function exportKml() {
-      if (parsedPoints.length === 0) {
-        parseCoordinates();
-      }
-      if (parsedPoints.length === 0) {
-        setStatus('Немає точок для формування KML.');
-        return;
-      }
-
-      var kmlContent = buildKml();
-      var fileName = (currentMode === 'route' ? 'milchat_route' : 'milchat_targets') + '.kml';
-
-      try {
-        var blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
-        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-          window.navigator.msSaveOrOpenBlob(blob, fileName);
-          setStatus('Файл <b>' + fileName + '</b> сформовано.');
+      function renderPoints() {
+        pointsCount.textContent = String(parsedPoints.length);
+        if (!parsedPoints.length) {
+          pointsList.textContent = 'Немає розпізнаних точок.';
+          kmlOutput.value = '';
           return;
         }
-        var url = URL.createObjectURL(blob);
-        var link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function() {
-          URL.revokeObjectURL(url);
-        }, 1500);
-        setStatus('Запущено збереження файлу <b>' + fileName + '</b>. Перевірте папку Завантаження та імпортуйте в MilChat.');
-      } catch (e) {
-        var dataUri = 'data:application/vnd.google-earth.kml+xml;charset=utf-8,' + encodeURIComponent(kmlContent);
-        var fallbackLink = document.createElement('a');
-        fallbackLink.href = dataUri;
-        fallbackLink.download = fileName;
-        document.body.appendChild(fallbackLink);
-        fallbackLink.click();
-        document.body.removeChild(fallbackLink);
-        setStatus('Використано резервне збереження <b>' + fileName + '</b>.');
+
+        pointsList.innerHTML = parsedPoints.map((p) => (
+          '<div class="point-item"><strong>' + p.index + '. ' + escapeXml(p.title) + '</strong><br>' +
+          'Широта: ' + p.lat + ' | Довгота: ' + p.lon + '</div>'
+        )).join('');
+
+        kmlOutput.value = buildKml(parsedPoints, routeNameInput.value.trim());
       }
-    }
 
-    function clearAll() {
-      document.getElementById('rawInput').value = '';
-      parsedPoints = [];
-      renderPoints();
-      drawPreview();
-      setStatus('Очищено.');
-    }
+      function getCapacitorFilesystem() {
+        const cap = window.Capacitor;
+        if (!cap || !cap.Plugins || !cap.Plugins.Filesystem) {
+          return null;
+        }
+        return cap.Plugins.Filesystem;
+      }
 
-    drawPreview();
+      async function saveWithCapacitorFilesystem(fs, fileName, kmlText) {
+        if (typeof fs.requestPermissions === 'function') {
+          try {
+            await fs.requestPermissions();
+          } catch (_) {}
+        }
+
+        const targets = [
+          { path: 'Download/' + fileName, directory: 'EXTERNAL_STORAGE', label: 'Внутрішня пам\'ять / Download/' + fileName },
+          { path: fileName, directory: 'DOCUMENTS', label: 'Документи / ' + fileName },
+          { path: fileName, directory: 'EXTERNAL_STORAGE', label: 'Внутрішня пам\'ять / ' + fileName }
+        ];
+
+        let lastError = null;
+        for (const target of targets) {
+          try {
+            const res = await fs.writeFile({
+              path: target.path,
+              data: kmlText,
+              directory: target.directory,
+              encoding: 'utf8',
+              recursive: true
+            });
+            return {
+              ok: true,
+              location: (res && res.uri) ? res.uri : target.label
+            };
+          } catch (err) {
+            lastError = err;
+          }
+        }
+
+        return {
+          ok: false,
+          error: lastError && lastError.message ? lastError.message : String(lastError || 'Невідома помилка запису')
+        };
+      }
+
+      parseBtn.addEventListener('click', function () {
+        parsedPoints = parseCoordinatesFromText(rawInput.value);
+        renderPoints();
+        if (parsedPoints.length > 0) {
+          setStatus('Розпізнано точок: ' + parsedPoints.length + '. Можна зберігати або копіювати KML.');
+        } else {
+          setStatus('Координати не знайдено. Перевір формат (наприклад: 48.5917546, 35.3306532).');
+        }
+      });
+
+      exportBtn.addEventListener('click', async function () {
+        if (!parsedPoints.length) {
+          parsedPoints = parseCoordinatesFromText(rawInput.value);
+          renderPoints();
+        }
+        if (!parsedPoints.length) {
+          setStatus('Немає точок для експорту.');
+          return;
+        }
+
+        const kmlText = buildKml(parsedPoints, routeNameInput.value.trim());
+        kmlOutput.value = kmlText;
+        const fileName = 'milchat_targets.kml';
+        const fs = getCapacitorFilesystem();
+
+        if (fs && typeof fs.writeFile === 'function') {
+          const saved = await saveWithCapacitorFilesystem(fs, fileName, kmlText);
+          if (saved.ok) {
+            setStatus('Файл збережено: ' + saved.location + '. Імпортуйте його в MilChat.');
+            return;
+          }
+          setStatus(
+            'Не вдалося записати файл через сховище (' + saved.error + '). Перевір дозвіл на пам\'ять або скористайся «Скопіювати KML-текст».'
+          );
+          return;
+        }
+
+        try {
+          const blob = new Blob([kmlText], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+          setStatus(
+            'Плагін Filesystem не підключено — запущено браузерне завантаження ' + fileName + '. Якщо файл не з\'явився у Завантаженнях, скопіюй KML нижче.'
+          );
+        } catch (err) {
+          setStatus('Помилка збереження: ' + (err && err.message ? err.message : err));
+        }
+      });
+
+      copyKmlBtn.addEventListener('click', async function () {
+        const text = kmlOutput.value || (parsedPoints.length ? buildKml(parsedPoints, routeNameInput.value.trim()) : '');
+        if (!text) {
+          setStatus('Спочатку розпізнай точки, щоб сформувати KML.');
+          return;
+        }
+        kmlOutput.value = text;
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            setStatus('KML-текст скопійовано в буфер обміну.');
+            return;
+          }
+        } catch (_) {}
+
+        kmlOutput.focus();
+        kmlOutput.select();
+        try {
+          document.execCommand('copy');
+          setStatus('KML-текст виділено та скопійовано.');
+        } catch (_) {
+          setStatus('Виділи текст у полі «Попередній перегляд KML» вручну та скопіюй.');
+        }
+      });
+
+      clearBtn.addEventListener('click', function () {
+        rawInput.value = '';
+        parsedPoints = [];
+        renderPoints();
+        setStatus('Поля очищено.');
+      });
+    })();
   </script>
 </body>
 </html>
